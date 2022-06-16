@@ -5,10 +5,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from posts.models import Group, Post, User
-
-INDEX_PAGE = reverse('posts:index')
-POST_CREATE_PAGE = reverse('posts:post_create')
-FOLLOWING_PAGE = reverse('posts:follow_index')
+from posts.tests.data_test_constants import INDEX_PAGE, POST_CREATE_PAGE
 
 
 class PostURLTests(TestCase):
@@ -55,7 +52,7 @@ class PostURLTests(TestCase):
             with self.subTest(address=address):
                 response = self.guest_client.get(address)
                 self.assertEqual(response.status_code, HTTPStatus.OK)
-    
+
     def test_urls_at_desired_location_for_authorized_client(self):
         """"Страницы доступны любому пользователю."""
         response = self.authorized_client.get(POST_CREATE_PAGE)
@@ -80,10 +77,15 @@ class PostURLTests(TestCase):
             with self.subTest(address=address):
                 response = self.guest_client.get(address)
                 self.assertEqual(response.status_code, HTTPStatus.FOUND)
+                self.assertRedirects(response, reverse(
+                    'users:login') + '?next=' + address)
+
         user = User.objects.create_user(username='unexist_test_username')
         self.authorized_client.force_login(user)
+
         response = self.authorized_client.get(self.POST_EDIT_PAGE)
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertRedirects(response, self.POST_DETAIL_PAGE)
 
     def test_urls_use_correct_templates(self):
         """URL-адреса используют соответствующие шаблоны."""

@@ -4,7 +4,7 @@
 {% endblock %}
 {% block content %}
   {% if user.is_authenticated %}
-    {% include 'posts/includes/switcher.html' %}
+    {% include 'posts/includes/switcher.html' with index=True %}
   {% endif %}
   {% for post in page_obj %}
     <article>

@@ -2,7 +2,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from posts.models import Group, Post, User
-from posts.tests.test_urls import INDEX_PAGE
+from posts.tests.data_test_constants import INDEX_PAGE
 
 POST_ON_PAGE_FIRST = 10
 POST_ON_PAGE_SECOND = 3
