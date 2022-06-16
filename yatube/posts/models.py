@@ -22,6 +22,7 @@ class Group(models.Model):
 
     class Meta:
         verbose_name_plural = 'Группы'
+        verbose_name = 'Группа'
 
 
 User = get_user_model()
@@ -94,7 +95,7 @@ class Comment(models.Model):
         verbose_name_plural = 'Комментарии'
 
     def __str__(self):
-        return self.text
+        return self.text[:FIRST_LETTERS]
 
 
 class Follow(models.Model):
@@ -112,5 +113,7 @@ class Follow(models.Model):
     )
 
     class Meta:
+        constraints = [models.UniqueConstraint(
+            fields=('author', 'user'), name='unique_following')]
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'

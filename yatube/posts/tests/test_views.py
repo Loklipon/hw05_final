@@ -1,13 +1,13 @@
 import shutil
 import tempfile
 
-from django import forms
 from django.conf import settings
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
+from posts.forms import PostForm
 from posts.models import Follow, Group, Post, User
 from posts.tests.test_urls import FOLLOWING_PAGE, INDEX_PAGE, POST_CREATE_PAGE
 
@@ -53,10 +53,6 @@ class PostViewsTests(TestCase):
             text='Текст поста',
             image=IMAGE,
         )
-        cls.second_post = Post.objects.create(
-            author=cls.second_user,
-            text='Текст поста второго пользователя',
-        )
         cls.GROUP_PAGE = reverse('posts:group_list', kwargs={
                                  'slug': cls.group.slug})
         cls.ANOTHER_GROUP_PAGE = reverse('posts:group_list', kwargs={
@@ -91,27 +87,33 @@ class PostViewsTests(TestCase):
 
     def test_view_function_show_correct_context(self):
         """View-функции передают ожидаемый словарь context."""
-        context_views = {
-            INDEX_PAGE: self.post,
-            self.POST_PROFILE_PAGE: self.post,
-            self.POST_DETAIL_PAGE: self.post,
-            self.GROUP_PAGE: self.post,
-        }
+        context_views = (
+            (INDEX_PAGE, self.post),
+            (self.POST_PROFILE_PAGE, self.post),
+            (self.GROUP_PAGE, self.post),
+        )
         for reverse_name, context in context_views.items():
             with self.subTest(reverse_name=reverse_name):
                 response = self.authorized_client.get(reverse_name)
-                self.assertEqual(response.context.get('post'), context)
+                self.assertEqual(response.context['page_obj'][0], context)
+        response = self.authorized_client.get(self.POST_DETAIL_PAGE)
+        self.assertEqual(response.context['post'], self.post)
         cache.clear()
 
+    def test_view_function_show_correct_context(self):
+        """View-функции создания и редактирования поста
+        передают ожидаемый словарь context."""
         context_views = {
-            POST_CREATE_PAGE: forms.ModelForm,
-            self.POST_EDIT_PAGE: forms.ModelForm,
+            POST_CREATE_PAGE: PostForm,
+            self.POST_EDIT_PAGE: PostForm,
         }
         for reverse_name, context in context_views.items():
             with self.subTest(reverse_name=reverse_name):
                 response = self.authorized_client.get(reverse_name)
                 self.assertIsInstance(response.context.get('form'), context)
 
+    def test_view_function_show_correct_context(self):
+        """Словарь context view-функций содержит ожидаемые значения"""
         context_views = [
             INDEX_PAGE,
             self.GROUP_PAGE,
@@ -145,8 +147,13 @@ class PostViewsTests(TestCase):
 
     def test_following(self):
         """Сервис подписок и отписок работает корректно"""
+        second_post = Post.objects.create(
+            author=self.second_user,
+            text='Текст поста второго пользователя',
+        )
+
         following_quantity = Follow.objects.count()
-        response = self.authorized_client.get(self.FOLLOW)
+        response = self.authorized_client.post(self.FOLLOW)
         self.assertTrue(Follow.objects.filter(
             user=self.user,
             author=self.second_user,
@@ -155,15 +162,14 @@ class PostViewsTests(TestCase):
         self.assertRedirects(response, self.FOLLOWING_POST_PROFILE_PAGE)
 
         response = self.authorized_client.get(FOLLOWING_PAGE)
-        self.assertEqual(response.context.get('post'), self.second_post)
+        self.assertEqual(response.context.get('post'), second_post)
 
         response = self.second_authorized_client.get(FOLLOWING_PAGE)
-        self.assertNotEqual(response.context.get('post'), self.second_post)
+        self.assertNotEqual(response.context.get('post'), second_post)
 
-        response = self.authorized_client.get(self.UNFOLLOW)
+        response = self.authorized_client.post(self.UNFOLLOW)
         self.assertFalse(Follow.objects.filter(
             user=self.user,
             author=self.second_user,
         ).exists())
         self.assertEqual(Follow.objects.count(), following_quantity)
-        # self.assertRedirects(response, self.FOLLOWING_POST_PROFILE_PAGE)

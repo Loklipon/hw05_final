@@ -3,7 +3,9 @@
   Последние обновления на сайте
 {% endblock %}
 {% block content %}
-  {% include 'posts/includes/switcher.html' %}
+  {% if user.is_authenticated %}
+    {% include 'posts/includes/switcher.html' %}
+  {% endif %}
   {% for post in page_obj %}
     <article>
       {% include 'includes/post_inf.html' %}

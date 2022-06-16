@@ -6,7 +6,7 @@ from posts.tests.test_urls import INDEX_PAGE
 
 POST_ON_PAGE_FIRST = 10
 POST_ON_PAGE_SECOND = 3
-POSTS_QUANTITY = 13
+POSTS_QUANTITY = POST_ON_PAGE_SECOND + POST_ON_PAGE_FIRST
 
 
 class PostPaginatorViewsTests(TestCase):
@@ -19,10 +19,12 @@ class PostPaginatorViewsTests(TestCase):
         cls.group = Group.objects.create(
             slug='test_slug',
         )
+        test_posts = []
         number_of_post = 0
         for number_of_post in range(0, POSTS_QUANTITY):
-            Post.objects.create(author=cls.user, group=cls.group)
+            test_posts.append(Post(author=cls.user, group=cls.group))
             number_of_post += 1
+        Post.objects.bulk_create(test_posts)
         cls.GROUP_PAGE = reverse('posts:group_list', kwargs={
                                  'slug': cls.group.slug})
         cls.POST_PROFILE_PAGE = reverse('posts:profile', kwargs={

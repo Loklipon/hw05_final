@@ -55,6 +55,11 @@ class PostURLTests(TestCase):
             with self.subTest(address=address):
                 response = self.guest_client.get(address)
                 self.assertEqual(response.status_code, HTTPStatus.OK)
+    
+    def test_urls_at_desired_location_for_authorized_client(self):
+        """"Страницы доступны любому пользователю."""
+        response = self.authorized_client.get(POST_CREATE_PAGE)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_unexisting_page_not_found(self):
         """"Старница unexisting_page недоступна
@@ -77,7 +82,7 @@ class PostURLTests(TestCase):
                 self.assertEqual(response.status_code, HTTPStatus.FOUND)
         user = User.objects.create_user(username='unexist_test_username')
         self.authorized_client.force_login(user)
-        response = self.guest_client.get(self.POST_EDIT_PAGE)
+        response = self.authorized_client.get(self.POST_EDIT_PAGE)
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
 
     def test_urls_use_correct_templates(self):

@@ -17,6 +17,10 @@ class PostFormTests(TestCase):
             username='test_username'
         )
         cls.group = Group.objects.create(
+            slug='group_slug',
+        )
+        cls.second_group = Group.objects.create(
+            slug='second_group_slug',
         )
         cls.post = Post.objects.create(
             author=cls.user,
@@ -52,12 +56,10 @@ class PostFormTests(TestCase):
             data=form_data,
         )
         self.assertEqual(Post.objects.count(), posts_count + 1)
-        self.assertTrue(Post.objects.filter(
-            text='Тестовый текст',
-            group=self.group,
-            author=self.user,
-            image='posts/picture.png',
-        ).exists())
+        first_obj = Post.objects.all().first()
+        self.assertEqual(first_obj.text, 'Тестовый текст')
+        self.assertEqual(first_obj.group, self.group)
+        self.assertEqual(first_obj.image, 'posts/picture.png')
         self.assertRedirects(response, self.POST_PROFILE_PAGE)
 
     def test_edit_post(self):
@@ -65,14 +67,17 @@ class PostFormTests(TestCase):
         posts_count = Post.objects.count()
         form_data = {
             'text': 'Новый тестовый текст',
+            'group': self.second_group.pk,
         }
         response = self.authorized_client.post(
             self.POST_EDIT_PAGE,
             data=form_data
         )
         self.assertEqual(Post.objects.count(), posts_count)
-        self.assertTrue(Post.objects.filter(
-            text='Новый тестовый текст').exists())
+        first_obj = Post.objects.all().first()
+        self.assertEqual(first_obj.text, 'Новый тестовый текст')
+        self.assertEqual(first_obj.group, self.second_group)
+        self.assertEqual(first_obj.author, self.user)
         self.assertFalse(Post.objects.filter(text=self.post.text).exists())
         self.assertRedirects(response, self.POST_DETAIL_PAGE)
 
@@ -118,8 +123,7 @@ class CommentFormTests(TestCase):
             data=form_data,
         )
         self.assertEqual(Comment.objects.count(), comment_count + 1)
-        self.assertTrue(Comment.objects.filter(
-            text='Текст второго комментария',
-            author=self.user,
-            post=self.post,
-        ).exists())
+        first_obj = Comment.objects.all().first()
+        self.assertEqual(first_obj.text, 'Текст второго комментария')
+        self.assertEqual(first_obj.author, self.user)
+        self.assertEqual(first_obj.post, self.post)

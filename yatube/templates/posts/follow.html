@@ -1,12 +1,11 @@
 {% extends 'base.html' %}
 {% block title %}
-  Последние автора, на которого вы подписаны
-{% endblock %}
-{% block header %}
-    Последние автора, на которого вы подписаны
+  Последние посты автора, на которого вы подписаны
 {% endblock %}
 {% block content %}
-  {% include 'posts/includes/switcher.html' %}
+  {% if user.is_authenticated %}
+    {% include 'posts/includes/switcher.html' %}
+  {% endif %}
   {% for post in page_obj %}
     <article>
       {% include 'includes/post_inf.html' %}
