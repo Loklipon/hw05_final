@@ -55,7 +55,7 @@ class PostURLTests(TestCase):
             with self.subTest(address=address):
                 response = self.guest_client.get(address)
                 self.assertEqual(response.status_code, HTTPStatus.OK)
-    
+
     def test_urls_at_desired_location_for_authorized_client(self):
         """"Страницы доступны любому пользователю."""
         response = self.authorized_client.get(POST_CREATE_PAGE)
